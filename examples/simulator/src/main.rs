@@ -21,37 +21,65 @@
 
 use embedded_graphics_simulator::{OutputSettings, SimulatorDisplay, SimulatorEvent, Window};
 use mousefood::embedded_graphics::geometry;
+use mousefood::embedded_graphics::prelude::{Dimensions, DrawTarget};
 use mousefood::error::Error;
 use mousefood::prelude::*;
 use ratatui::widgets::{Block, Paragraph, Wrap};
 use ratatui::{Frame, Terminal, style::*};
 
+struct MySuperDisplay {
+    simulator_window: Window,
+    display: SimulatorDisplay<Bgr565>,
+}
+
+impl mousefood::Flush for MySuperDisplay {
+    fn flush(&mut self) -> Result<(), mousefood::FlushError> {
+        self.simulator_window.update(&self.display);
+        if self
+            .simulator_window
+            .events()
+            .any(|e| e == SimulatorEvent::Quit)
+        {
+            return Err(mousefood::FlushError);
+            // panic!("simulator window closed");
+        }
+        Ok(())
+    }
+}
+
+impl DrawTarget for MySuperDisplay {
+    type Color = Bgr565;
+
+    type Error = core::convert::Infallible;
+
+    fn draw_iter<I>(&mut self, pixels: I) -> Result<(), Self::Error>
+    where
+        I: IntoIterator<Item = mousefood::embedded_graphics::Pixel<Self::Color>>,
+    {
+        self.display.draw_iter(pixels)
+    }
+}
+
+impl Dimensions for MySuperDisplay {
+    fn bounding_box(&self) -> mousefood::embedded_graphics::primitives::Rectangle {
+        self.display.bounding_box()
+    }
+}
+
 fn main() -> Result<(), Error> {
-    // Create window where the simulation will happen
-    let mut simulator_window = Window::new(
-        "mousefood simulator",
-        &OutputSettings {
-            scale: 4,
-            max_fps: 30,
-            ..Default::default()
-        },
-    );
-
-    // Define properties of the display which will be shown in the simulator window
-    let mut display = SimulatorDisplay::<Bgr565>::new(geometry::Size::new(128, 64));
-
-    let backend_config = EmbeddedBackendConfig {
-        // Define how to display newly rendered widgets to the simulator window
-        flush_callback: Box::new(move |display| {
-            simulator_window.update(display);
-            if simulator_window.events().any(|e| e == SimulatorEvent::Quit) {
-                panic!("simulator window closed");
-            }
-        }),
-        ..Default::default()
+    let mut display = MySuperDisplay {
+        display: SimulatorDisplay::<Bgr565>::new(geometry::Size::new(128, 64)),
+        simulator_window: Window::new(
+            "mousefood simulator",
+            &OutputSettings {
+                scale: 4,
+                max_fps: 30,
+                ..Default::default()
+            },
+        ),
     };
-    let backend: EmbeddedBackend<SimulatorDisplay<_>, _> =
-        EmbeddedBackend::new(&mut display, backend_config);
+
+    let backend = EmbeddedBackend::new(&mut display, EmbeddedBackendConfig::default());
 
     // Start ratatui with our simulator backend
     let mut terminal = Terminal::new(backend)?;
