@@ -12,6 +12,7 @@ mod macros;
 pub mod prelude;
 
 pub use backend::{EmbeddedBackend, EmbeddedBackendConfig};
+pub use backend::{FlushError, Flush};
 pub use embedded_graphics;
 
 #[cfg(feature = "fonts")]

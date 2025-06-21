@@ -1,6 +1,3 @@
-use alloc::boxed::Box;
-use core::marker::PhantomData;
-
 use crate::colors::*;
 use crate::default_font;
 use crate::framebuffer;
@@ -14,14 +11,15 @@ use ratatui_core::backend::{Backend, ClearType};
 use ratatui_core::layout;
 use ratatui_core::style;
 
+#[derive(Debug)]
+pub struct FlushError;
+
+pub trait Flush {
+    fn flush(&mut self) -> Result<(), FlushError>;
+}
+
 /// Embedded backend configuration.
-pub struct EmbeddedBackendConfig<D, C>
-where
-    D: DrawTarget<Color = C>,
-    C: PixelColor,
-{
-    /// Callback fired after each buffer flush.
-    pub flush_callback: Box<dyn FnMut(&mut D)>,
+pub struct EmbeddedBackendConfig {
     /// Regular font.
     pub font_regular: MonoFont<'static>,
     /// Bold font.
@@ -30,14 +28,9 @@ where
     pub font_italic: Option<MonoFont<'static>>,
 }
 
-impl<D, C> Default for EmbeddedBackendConfig<D, C>
-where
-    D: DrawTarget<Color = C>,
-    C: PixelColor,
-{
+impl Default for EmbeddedBackendConfig {
     fn default() -> Self {
         Self {
-            flush_callback: Box::new(|_| {}),
             font_regular: default_font::regular,
             font_bold: None,
             font_italic: None,
@@ -57,14 +50,10 @@ where
 /// ```
 pub struct EmbeddedBackend<'display, D, C>
 where
-    D: DrawTarget<Color = C> + 'display,
+    D: DrawTarget<Color = C> + Flush + 'display,
     C: PixelColor + 'display,
 {
     display: &'display mut D,
-    display_type: PhantomData<D>,
-
-    flush_callback: Box<dyn FnMut(&mut D)>,
-
     buffer: framebuffer::HeapBuffer<C>,
 
     font_regular: MonoFont<'static>,
@@ -79,12 +68,11 @@ where
 
 impl<'display, D, C> EmbeddedBackend<'display, D, C>
 where
-    D: DrawTarget<Color = C> + Dimensions + 'static,
+    D: DrawTarget<Color = C> + Dimensions + Flush + 'static,
     C: PixelColor + Into<Rgb888> + From<Rgb888> + From<TermColor> + 'static,
 {
     fn init(
         display: &'display mut D,
-        flush_callback: impl FnMut(&mut D) + 'static,
         font_regular: MonoFont<'static>,
         font_bold: Option<MonoFont<'static>>,
         font_italic: Option<MonoFont<'static>>,
@@ -96,8 +84,6 @@ where
         Self {
             buffer: framebuffer::HeapBuffer::new(display.bounding_box()),
             display,
-            display_type: PhantomData,
-            flush_callback: Box::new(flush_callback),
             font_regular,
             font_bold,
             font_italic,
@@ -113,11 +99,10 @@ where
     /// Creates a new `EmbeddedBackend` using default fonts.
     pub fn new(
         display: &'display mut D,
-        config: EmbeddedBackendConfig<D, C>,
+        config: EmbeddedBackendConfig,
     ) -> EmbeddedBackend<'display, D, C> {
         Self::init(
             display,
-            config.flush_callback,
             config.font_regular,
             config.font_bold,
             config.font_italic,
@@ -129,7 +114,7 @@ type Result<T, E = crate::error::Error> = core::result::Result<T, E>;
 
 impl<D, C> Backend for EmbeddedBackend<'_, D, C>
 where
-    D: DrawTarget<Color = C> + 'static,
+    D: DrawTarget<Color = C> + Flush + 'static,
     C: PixelColor + Into<Rgb888> + From<Rgb888> + From<TermColor> + 'static,
 {
     type Error = crate::error::Error;
@@ -243,7 +228,7 @@ where
         self.display
             .fill_contiguous(&self.display.bounding_box(), &self.buffer)
             .map_err(|_| crate::error::Error::DrawError)?;
-        (self.flush_callback)(self.display);
+        self.display.flush().map_err(crate::error::Error::Flush)?;
         Ok(())
     }
 }
