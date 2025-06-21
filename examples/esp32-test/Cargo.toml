@@ -1,0 +1,36 @@
+[package]
+name = "esp32-test"
+version = "0.1.0"
+authors = ["Philippe Loctaux <p@philippeloctaux.com>"]
+edition = "2021"
+resolver = "2"
+rust-version = "1.77"
+
+[[bin]]
+name = "esp32-test"
+harness = false # do not use the built in cargo test harness -> resolve rust-analyzer errors
+
+[profile.release]
+# opt-level = "s"
+opt-level = 3
+
+[profile.dev]
+debug = true    # Symbols are nice and they don't increase the size on Flash
+# opt-level = "z"
+opt-level = 3
+
+[features]
+default = []
+
+experimental = ["esp-idf-svc/experimental"]
+
+[dependencies]
+log = "0.4"
+esp-idf-svc = "0.51"
+mousefood = { path = "../../mousefood/", features = ["std"] }
+ssd1306 = "0.10.0"
+ratatui = { version = "0.30.0-alpha.4",  default-features = false }
+display-interface = "0.5.0"
+
+[build-dependencies]
+embuild = "0.33"
