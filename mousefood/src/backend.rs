@@ -1,9 +1,7 @@
-use alloc::boxed::Box;
 use core::marker::PhantomData;
 
 use crate::colors::*;
 use crate::default_font;
-use crate::framebuffer;
 use embedded_graphics::Drawable;
 use embedded_graphics::draw_target::DrawTarget;
 use embedded_graphics::geometry::{self, Dimensions};
@@ -14,14 +12,37 @@ use ratatui_core::backend::{Backend, ClearType};
 use ratatui_core::layout;
 use ratatui_core::style;
 
-/// Embedded backend configuration.
-pub struct EmbeddedBackendConfig<D, C>
+pub trait MousefoodDisplay<D, C>
 where
-    D: DrawTarget<Color = C>,
-    C: PixelColor,
+    D: DrawTarget<Color = C> + Dimensions,
+    C: PixelColor + From<TermColor>,
 {
-    /// Callback fired after each buffer flush.
-    pub flush_callback: Box<dyn FnMut(&mut D)>,
+    fn get_drawable_target(&mut self) -> &mut (impl DrawTarget<Color = C> + Dimensions);
+    fn flush(&mut self) -> Result<()>;
+
+    // Force a display reset to have a coherent look on unbuffered and buffered display
+    fn init(&mut self) -> Result<()> {
+        self.reset()?;
+
+        Ok(())
+    }
+
+    fn reset(&mut self) -> Result<()> {
+        self.get_drawable_target()
+            .clear(TermColor(style::Color::Reset, TermColorType::Background).into())
+            .map_err(|_| crate::error::Error::DrawError)
+    }
+
+    fn clear(&mut self) -> Result<()> {
+        self.reset()?;
+        self.flush()?;
+
+        Ok(())
+    }
+}
+
+/// Embedded backend configuration.
+pub struct EmbeddedBackendConfig {
     /// Regular font.
     pub font_regular: MonoFont<'static>,
     /// Bold font.
@@ -30,14 +51,9 @@ where
     pub font_italic: Option<MonoFont<'static>>,
 }
 
-impl<D, C> Default for EmbeddedBackendConfig<D, C>
-where
-    D: DrawTarget<Color = C>,
-    C: PixelColor,
-{
+impl Default for EmbeddedBackendConfig {
     fn default() -> Self {
         Self {
-            flush_callback: Box::new(|_| {}),
             font_regular: default_font::regular,
             font_bold: None,
             font_italic: None,
@@ -55,18 +71,14 @@ where
 /// let backend = EmbeddedBackend::new(&mut display, EmbeddedBackendConfig::default());
 /// let mut terminal = Terminal::new(backend).unwrap();
 /// ```
-pub struct EmbeddedBackend<'display, D, C>
+pub struct EmbeddedBackend<'display, D, C, M>
 where
+    M: MousefoodDisplay<D, C>,
     D: DrawTarget<Color = C> + 'display,
-    C: PixelColor + 'display,
+    C: PixelColor + 'display + From<TermColor>,
 {
-    display: &'display mut D,
+    display: &'display mut M,
     display_type: PhantomData<D>,
-
-    flush_callback: Box<dyn FnMut(&mut D)>,
-
-    buffer: framebuffer::HeapBuffer<C>,
-
     font_regular: MonoFont<'static>,
     font_bold: Option<MonoFont<'static>>,
     font_italic: Option<MonoFont<'static>>,
@@ -77,27 +89,26 @@ where
     pixels: layout::Size,
 }
 
-impl<'display, D, C> EmbeddedBackend<'display, D, C>
+impl<'display, D, C, M> EmbeddedBackend<'display, D, C, M>
 where
+    M: MousefoodDisplay<D, C> + Dimensions,
     D: DrawTarget<Color = C> + Dimensions + 'static,
     C: PixelColor + Into<Rgb888> + From<Rgb888> + From<TermColor> + 'static,
 {
     fn init(
-        display: &'display mut D,
-        flush_callback: impl FnMut(&mut D) + 'static,
+        display: &'display mut M,
         font_regular: MonoFont<'static>,
         font_bold: Option<MonoFont<'static>>,
         font_italic: Option<MonoFont<'static>>,
-    ) -> EmbeddedBackend<'display, D, C> {
+    ) -> Result<EmbeddedBackend<'display, D, C, M>> {
         let pixels = layout::Size {
             width: display.bounding_box().size.width as u16,
             height: display.bounding_box().size.height as u16,
         };
-        Self {
-            buffer: framebuffer::HeapBuffer::new(display.bounding_box()),
+
+        let backend = Self {
             display,
             display_type: PhantomData,
-            flush_callback: Box::new(flush_callback),
             font_regular,
             font_bold,
             font_italic,
@@ -107,17 +118,24 @@ where
                 width: pixels.width / font_regular.character_size.width as u16,
             },
             pixels,
-        }
+        };
+
+        // Initialize and clear display
+        backend
+            .display
+            .init()
+            .map_err(|_| crate::error::Error::Init)?;
+
+        Ok(backend)
     }
 
     /// Creates a new `EmbeddedBackend` using default fonts.
     pub fn new(
-        display: &'display mut D,
-        config: EmbeddedBackendConfig<D, C>,
-    ) -> EmbeddedBackend<'display, D, C> {
+        display: &'display mut M,
+        config: EmbeddedBackendConfig,
+    ) -> Result<EmbeddedBackend<'display, D, C, M>> {
         Self::init(
             display,
-            config.flush_callback,
             config.font_regular,
             config.font_bold,
             config.font_italic,
@@ -127,8 +145,9 @@ where
 
 type Result<T, E = crate::error::Error> = core::result::Result<T, E>;
 
-impl<D, C> Backend for EmbeddedBackend<'_, D, C>
+impl<D, C, M> Backend for EmbeddedBackend<'_, D, C, M>
 where
+    M: MousefoodDisplay<D, C>,
     D: DrawTarget<Color = C> + 'static,
     C: PixelColor + Into<Rgb888> + From<Rgb888> + From<TermColor> + 'static,
 {
@@ -181,7 +200,7 @@ where
                 position + self.char_offset,
                 style_builder.build(),
             )
-            .draw(&mut self.buffer)
+            .draw(self.display.get_drawable_target())
             .map_err(|_| crate::error::Error::DrawError)?;
         }
         Ok(())
@@ -211,9 +230,7 @@ where
     }
 
     fn clear(&mut self) -> Result<()> {
-        self.buffer
-            .clear(TermColor(style::Color::Reset, TermColorType::Background).into())
-            .map_err(|_| crate::error::Error::DrawError)
+        self.display.clear()
     }
 
     fn clear_region(&mut self, clear_type: ClearType) -> Result<()> {
@@ -240,10 +257,6 @@ where
     }
 
     fn flush(&mut self) -> Result<()> {
-        self.display
-            .fill_contiguous(&self.display.bounding_box(), &self.buffer)
-            .map_err(|_| crate::error::Error::DrawError)?;
-        (self.flush_callback)(self.display);
-        Ok(())
+        self.display.flush()
     }
 }
