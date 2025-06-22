@@ -82,6 +82,7 @@ fn main() -> Result<(), Error> {
     let backend = EmbeddedBackend::new(&mut display, EmbeddedBackendConfig::default());
 
     // Start ratatui with our simulator backend
+    println!("starting ratatui");
     let mut terminal = Terminal::new(backend)?;
 
     // Run an infinite loop, where widgets will be rendered
@@ -97,4 +98,5 @@ fn draw(frame: &mut Frame) {
         .border_style(Style::new().yellow())
         .title("Mousefood");
     frame.render_widget(paragraph.block(bordered_block), frame.area());
+    println!("drew widget");
 }

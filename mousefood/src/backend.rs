@@ -54,8 +54,6 @@ where
     C: PixelColor + 'display,
 {
     display: &'display mut D,
-    buffer: framebuffer::HeapBuffer<C>,
-
     font_regular: MonoFont<'static>,
     font_bold: Option<MonoFont<'static>>,
     font_italic: Option<MonoFont<'static>>,
@@ -82,7 +80,6 @@ where
             height: display.bounding_box().size.height as u16,
         };
         Self {
-            buffer: framebuffer::HeapBuffer::new(display.bounding_box()),
             display,
             font_regular,
             font_bold,
@@ -166,7 +163,7 @@ where
                 position + self.char_offset,
                 style_builder.build(),
             )
-            .draw(&mut self.buffer)
+            .draw(self.display)
             .map_err(|_| crate::error::Error::DrawError)?;
         }
         Ok(())
@@ -196,7 +193,7 @@ where
     }
 
     fn clear(&mut self) -> Result<()> {
-        self.buffer
+        self.display
             .clear(TermColor(style::Color::Reset, TermColorType::Background).into())
             .map_err(|_| crate::error::Error::DrawError)
     }
@@ -225,9 +222,6 @@ where
     }
 
     fn flush(&mut self) -> Result<()> {
-        self.display
-            .fill_contiguous(&self.display.bounding_box(), &self.buffer)
-            .map_err(|_| crate::error::Error::DrawError)?;
         self.display.flush().map_err(crate::error::Error::Flush)?;
         Ok(())
     }
