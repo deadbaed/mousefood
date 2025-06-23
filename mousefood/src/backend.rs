@@ -22,22 +22,15 @@ where
 
     // Force a display reset to have a coherent look on unbuffered and buffered display
     fn init(&mut self) -> Result<()> {
-        self.reset()?;
+        self.clear()?;
 
         Ok(())
-    }
-
-    fn reset(&mut self) -> Result<()> {
-        self.get_drawable_target()
-            .clear(TermColor(style::Color::Reset, TermColorType::Background).into())
-            .map_err(|_| crate::error::Error::DrawError)
     }
 
     fn clear(&mut self) -> Result<()> {
-        self.reset()?;
-        self.flush()?;
-
-        Ok(())
+        self.get_drawable_target()
+            .clear(TermColor(style::Color::Reset, TermColorType::Background).into())
+            .map_err(|_| crate::error::Error::DrawError)
     }
 }
 

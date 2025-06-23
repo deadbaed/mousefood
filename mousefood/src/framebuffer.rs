@@ -16,10 +16,7 @@ pub struct HeapBuffer<C: PixelColor + Copy> {
 impl<C: PixelColor + From<TermColor>> HeapBuffer<C> {
     pub fn new(bounding_box: Rectangle) -> HeapBuffer<C> {
         Self {
-            data: vec![
-                TermColor(Color::Reset, TermColorType::Background).into();
-                (bounding_box.size.width * bounding_box.size.height) as usize
-            ],
+            data: Vec::with_capacity((bounding_box.size.width * bounding_box.size.height) as usize),
             bounding_box,
         }
     }
