@@ -6,12 +6,20 @@ use embedded_graphics::geometry::Dimensions;
 use embedded_graphics::pixelcolor::PixelColor;
 use embedded_graphics::primitives::Rectangle;
 
+/// Framebuffer holding pixels, waiting to be drawn to the real display.
+///
+/// Useful if the real display does not already include a framebuffer.
 pub struct HeapBuffer<C: PixelColor + Copy> {
     data: Vec<C>,
     bounding_box: Rectangle,
 }
 
 impl<C: PixelColor + From<TermColor>> HeapBuffer<C> {
+    /// Create a new framebuffer [`Rectangle`] dimensions
+    ///
+    /// # Arguments
+    ///
+    /// * `bounding_box` - The dimensions of the framebuffer
     pub fn new(bounding_box: Rectangle) -> HeapBuffer<C> {
         Self {
             data: vec![
