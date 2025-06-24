@@ -1,12 +1,10 @@
+use crate::colors::TermColor;
 use alloc::{vec, vec::IntoIter, vec::Vec};
-
-use crate::colors::{TermColor, TermColorType};
 use embedded_graphics::Pixel;
 use embedded_graphics::draw_target::DrawTarget;
 use embedded_graphics::geometry::Dimensions;
 use embedded_graphics::pixelcolor::PixelColor;
 use embedded_graphics::primitives::Rectangle;
-use ratatui_core::style::Color;
 
 pub struct HeapBuffer<C: PixelColor + Copy> {
     pub data: Vec<C>,
@@ -16,7 +14,10 @@ pub struct HeapBuffer<C: PixelColor + Copy> {
 impl<C: PixelColor + From<TermColor>> HeapBuffer<C> {
     pub fn new(bounding_box: Rectangle) -> HeapBuffer<C> {
         Self {
-            data: Vec::with_capacity((bounding_box.size.width * bounding_box.size.height) as usize),
+            data: vec![
+                crate::colors::INITIAL_COLOR.into();
+                (bounding_box.size.width * bounding_box.size.height) as usize
+            ],
             bounding_box,
         }
     }

@@ -209,7 +209,7 @@ where
     fn clear(&mut self) -> Result<()> {
         self.display
             .get_drawable_target()
-            .clear(TermColor(style::Color::Reset, TermColorType::Background).into())
+            .clear(crate::colors::INITIAL_COLOR.into())
             .map_err(|_| crate::error::Error::DrawError)
     }
 

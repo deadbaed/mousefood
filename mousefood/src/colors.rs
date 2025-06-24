@@ -4,6 +4,9 @@ use embedded_graphics::pixelcolor::{
 };
 use ratatui_core::style::Color;
 
+// Initial color to use when initializing buffered and unbuffered displays
+pub(crate) const INITIAL_COLOR: TermColor = TermColor(Color::Reset, TermColorType::Background);
+
 pub enum TermColorType {
     Foreground,
     Background,
