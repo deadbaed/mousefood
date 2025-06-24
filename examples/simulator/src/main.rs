@@ -47,8 +47,7 @@ fn main() -> Result<(), Error> {
     impl mousefood::MousefoodDisplay<SimulatorDisplay<Bgr565>, Bgr565> for MySuperDisplay {
         fn get_drawable_target(
             &mut self,
-        ) -> &mut (impl mousefood::embedded_graphics::prelude::DrawTarget<Color = Bgr565> + mousefood::embedded_graphics::prelude::Dimensions)
-        {
+        ) -> &mut impl mousefood::embedded_graphics::prelude::DrawTarget<Color = Bgr565> {
             &mut self.display
         }
 
