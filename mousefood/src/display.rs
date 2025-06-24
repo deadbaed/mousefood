@@ -1,5 +1,6 @@
+use crate::colors::TermColor;
 use crate::error::Result;
-use crate::prelude::display::*;
+use embedded_graphics::prelude::DrawTarget;
 use embedded_graphics::prelude::PixelColor;
 
 pub trait DisplayTarget<D, C>

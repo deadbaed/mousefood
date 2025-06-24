@@ -13,9 +13,9 @@ mod macros;
 pub mod prelude;
 
 pub use backend::{EmbeddedBackend, EmbeddedBackendConfig};
+pub use display::DisplayTarget;
 pub use embedded_graphics;
 pub use framebuffer::HeapBuffer;
-pub use display::DisplayTarget;
 
 #[cfg(feature = "fonts")]
 pub use embedded_graphics_unicodefonts as fonts;
