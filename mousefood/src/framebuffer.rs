@@ -7,7 +7,7 @@ use embedded_graphics::pixelcolor::PixelColor;
 use embedded_graphics::primitives::Rectangle;
 
 pub struct HeapBuffer<C: PixelColor + Copy> {
-    pub data: Vec<C>,
+    data: Vec<C>,
     bounding_box: Rectangle,
 }
 
@@ -15,7 +15,7 @@ impl<C: PixelColor + From<TermColor>> HeapBuffer<C> {
     pub fn new(bounding_box: Rectangle) -> HeapBuffer<C> {
         Self {
             data: vec![
-                crate::colors::INITIAL_COLOR.into();
+                crate::colors::TermColor::initial_color().into();
                 (bounding_box.size.width * bounding_box.size.height) as usize
             ],
             bounding_box,

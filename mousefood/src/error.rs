@@ -1,5 +1,7 @@
 //! Mousefood `Error` enum.
 
+pub(crate) type Result<T, E = Error> = core::result::Result<T, E>;
+
 /// Represents backend error.
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
@@ -9,8 +11,10 @@ pub enum Error {
     /// Selected [`ClearType`] is not supported by Mousefood.
     #[error("ClearType::{0} is not supported by Mousefood")]
     ClearTypeUnsupported(alloc::string::String),
-    #[error("flushing display failed")]
+    /// Flushing to the display failed.
+    #[error("flushing to DrawTarget failed")]
     Flush,
-    #[error("failed to initialize display")]
+    /// Failed to write initial pixels to initialize the display.
+    #[error("could not draw reset pixels to DrawTarget, initialization failed")]
     Init,
 }

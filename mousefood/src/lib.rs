@@ -6,14 +6,16 @@ extern crate alloc;
 mod backend;
 mod colors;
 mod default_font;
+mod display;
 pub mod error;
 mod framebuffer;
 mod macros;
 pub mod prelude;
 
-pub use backend::{EmbeddedBackend, EmbeddedBackendConfig, MousefoodDisplay};
+pub use backend::{EmbeddedBackend, EmbeddedBackendConfig};
 pub use embedded_graphics;
 pub use framebuffer::HeapBuffer;
+pub use display::DisplayTarget;
 
 #[cfg(feature = "fonts")]
 pub use embedded_graphics_unicodefonts as fonts;

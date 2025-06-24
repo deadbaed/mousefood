@@ -4,15 +4,19 @@ use embedded_graphics::pixelcolor::{
 };
 use ratatui_core::style::Color;
 
-// Initial color to use when initializing buffered and unbuffered displays
-pub(crate) const INITIAL_COLOR: TermColor = TermColor(Color::Reset, TermColorType::Background);
-
 pub enum TermColorType {
     Foreground,
     Background,
 }
 
 pub struct TermColor(pub Color, pub TermColorType);
+
+impl TermColor {
+    /// Initial color to use when initializing buffered and unbuffered displays
+    pub const fn initial_color() -> Self {
+        TermColor(Color::Reset, TermColorType::Background)
+    }
+}
 
 macro_rules! impl_from_term_color {
     (

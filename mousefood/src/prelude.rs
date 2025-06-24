@@ -7,6 +7,13 @@
 //! ```
 
 pub use crate::backend::{EmbeddedBackend, EmbeddedBackendConfig};
+pub use display::*;
 pub use embedded_graphics::pixelcolor::{
     Bgr555, Bgr565, Bgr666, Bgr888, Rgb555, Rgb565, Rgb666, Rgb888,
 };
+
+pub mod display {
+    pub use crate::colors::TermColor;
+    pub use crate::display::DisplayTarget;
+    pub use embedded_graphics::prelude::DrawTarget;
+}

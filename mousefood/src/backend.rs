@@ -1,7 +1,8 @@
-use core::marker::PhantomData;
-
 use crate::colors::*;
 use crate::default_font;
+use crate::display::DisplayTarget;
+use crate::error::Result;
+use core::marker::PhantomData;
 use embedded_graphics::Drawable;
 use embedded_graphics::draw_target::DrawTarget;
 use embedded_graphics::geometry::{self, Dimensions};
@@ -11,15 +12,6 @@ use embedded_graphics::text::Text;
 use ratatui_core::backend::{Backend, ClearType};
 use ratatui_core::layout;
 use ratatui_core::style;
-
-pub trait MousefoodDisplay<D, C>
-where
-    D: DrawTarget<Color = C> + Dimensions,
-    C: PixelColor + From<TermColor>,
-{
-    fn get_drawable_target(&mut self) -> &mut (impl DrawTarget<Color = C> + Dimensions);
-    fn flush(&mut self) -> Result<()>;
-}
 
 /// Embedded backend configuration.
 pub struct EmbeddedBackendConfig {
@@ -53,7 +45,7 @@ impl Default for EmbeddedBackendConfig {
 /// ```
 pub struct EmbeddedBackend<'display, D, C, M>
 where
-    M: MousefoodDisplay<D, C>,
+    M: DisplayTarget<D, C>,
     D: DrawTarget<Color = C> + 'display,
     C: PixelColor + 'display + From<TermColor>,
 {
@@ -71,8 +63,8 @@ where
 
 impl<'display, D, C, M> EmbeddedBackend<'display, D, C, M>
 where
-    M: MousefoodDisplay<D, C> + Dimensions,
-    D: DrawTarget<Color = C> + Dimensions + 'static,
+    M: DisplayTarget<D, C> + Dimensions,
+    D: DrawTarget<Color = C> + 'static,
     C: PixelColor + Into<Rgb888> + From<Rgb888> + From<TermColor> + 'static,
 {
     fn init(
@@ -120,13 +112,11 @@ where
     }
 }
 
-type Result<T, E = crate::error::Error> = core::result::Result<T, E>;
-
 impl<D, C, M> Backend for EmbeddedBackend<'_, D, C, M>
 where
-    M: MousefoodDisplay<D, C>,
-    D: DrawTarget<Color = C> + 'static,
-    C: PixelColor + Into<Rgb888> + From<Rgb888> + From<TermColor> + 'static,
+    M: DisplayTarget<D, C>,
+    D: DrawTarget<Color = C>,
+    C: PixelColor + Into<Rgb888> + From<Rgb888> + From<TermColor>,
 {
     type Error = crate::error::Error;
 
@@ -177,7 +167,7 @@ where
                 position + self.char_offset,
                 style_builder.build(),
             )
-            .draw(self.display.get_drawable_target())
+            .draw(self.display.draw_target())
             .map_err(|_| crate::error::Error::DrawError)?;
         }
         Ok(())
@@ -208,8 +198,8 @@ where
 
     fn clear(&mut self) -> Result<()> {
         self.display
-            .get_drawable_target()
-            .clear(crate::colors::INITIAL_COLOR.into())
+            .draw_target()
+            .clear(crate::colors::TermColor::initial_color().into())
             .map_err(|_| crate::error::Error::DrawError)
     }
 
