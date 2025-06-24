@@ -19,19 +19,6 @@ where
 {
     fn get_drawable_target(&mut self) -> &mut (impl DrawTarget<Color = C> + Dimensions);
     fn flush(&mut self) -> Result<()>;
-
-    // Force a display reset to have a coherent look on unbuffered and buffered display
-    fn init(&mut self) -> Result<()> {
-        self.clear()?;
-
-        Ok(())
-    }
-
-    fn clear(&mut self) -> Result<()> {
-        self.get_drawable_target()
-            .clear(TermColor(style::Color::Reset, TermColorType::Background).into())
-            .map_err(|_| crate::error::Error::DrawError)
-    }
 }
 
 /// Embedded backend configuration.
@@ -99,7 +86,7 @@ where
             height: display.bounding_box().size.height as u16,
         };
 
-        let backend = Self {
+        let mut backend = Self {
             display,
             display_type: PhantomData,
             font_regular,
@@ -113,11 +100,8 @@ where
             pixels,
         };
 
-        // Initialize and clear display
-        backend
-            .display
-            .init()
-            .map_err(|_| crate::error::Error::Init)?;
+        // Start with a clear display to have a coherent look on unbuffered and buffered display
+        backend.clear().map_err(|_| crate::error::Error::Init)?;
 
         Ok(backend)
     }
@@ -223,7 +207,10 @@ where
     }
 
     fn clear(&mut self) -> Result<()> {
-        self.display.clear()
+        self.display
+            .get_drawable_target()
+            .clear(TermColor(style::Color::Reset, TermColorType::Background).into())
+            .map_err(|_| crate::error::Error::DrawError)
     }
 
     fn clear_region(&mut self, clear_type: ClearType) -> Result<()> {
