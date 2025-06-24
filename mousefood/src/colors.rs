@@ -11,10 +11,9 @@ pub enum TermColorType {
 
 pub struct TermColor(pub Color, pub TermColorType);
 
-impl TermColor {
-    /// Initial color to use when initializing buffered and unbuffered displays
-    pub const fn initial_color() -> Self {
-        TermColor(Color::Reset, TermColorType::Background)
+impl Default for TermColor {
+    fn default() -> Self {
+        Self(Color::Reset, TermColorType::Background)
     }
 }
 

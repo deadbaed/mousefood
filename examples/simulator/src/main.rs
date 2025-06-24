@@ -44,7 +44,7 @@ fn main() -> Result<(), Error> {
         ),
     };
 
-    impl DisplayTarget<SimulatorDisplay<Bgr565>, Bgr565> for MySuperDisplay {
+    impl BufferedDisplay<SimulatorDisplay<Bgr565>, Bgr565> for MySuperDisplay {
         fn draw_target(
             &mut self,
         ) -> &mut impl mousefood::embedded_graphics::prelude::DrawTarget<Color = Bgr565> {
@@ -62,19 +62,6 @@ fn main() -> Result<(), Error> {
                 return Err(mousefood::error::Error::Flush);
             }
             Ok(())
-        }
-    }
-
-    impl mousefood::embedded_graphics::prelude::DrawTarget for MySuperDisplay {
-        type Color = Bgr565;
-
-        type Error = core::convert::Infallible;
-
-        fn draw_iter<I>(&mut self, pixels: I) -> Result<(), Self::Error>
-        where
-            I: IntoIterator<Item = mousefood::embedded_graphics::Pixel<Self::Color>>,
-        {
-            self.display.draw_iter(pixels)
         }
     }
 

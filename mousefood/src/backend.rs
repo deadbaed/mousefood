@@ -1,7 +1,7 @@
+use crate::Result;
 use crate::colors::*;
 use crate::default_font;
-use crate::display::DisplayTarget;
-use crate::error::Result;
+use crate::display::BufferedDisplay;
 use core::marker::PhantomData;
 use embedded_graphics::Drawable;
 use embedded_graphics::draw_target::DrawTarget;
@@ -45,7 +45,7 @@ impl Default for EmbeddedBackendConfig {
 /// ```
 pub struct EmbeddedBackend<'display, D, C, M>
 where
-    M: DisplayTarget<D, C>,
+    M: BufferedDisplay<D, C>,
     D: DrawTarget<Color = C> + 'display,
     C: PixelColor + 'display + From<TermColor>,
 {
@@ -63,7 +63,7 @@ where
 
 impl<'display, D, C, M> EmbeddedBackend<'display, D, C, M>
 where
-    M: DisplayTarget<D, C> + Dimensions,
+    M: BufferedDisplay<D, C> + Dimensions,
     D: DrawTarget<Color = C> + 'static,
     C: PixelColor + Into<Rgb888> + From<Rgb888> + From<TermColor> + 'static,
 {
@@ -114,7 +114,7 @@ where
 
 impl<D, C, M> Backend for EmbeddedBackend<'_, D, C, M>
 where
-    M: DisplayTarget<D, C>,
+    M: BufferedDisplay<D, C>,
     D: DrawTarget<Color = C>,
     C: PixelColor + Into<Rgb888> + From<Rgb888> + From<TermColor>,
 {
@@ -199,7 +199,7 @@ where
     fn clear(&mut self) -> Result<()> {
         self.display
             .draw_target()
-            .clear(crate::colors::TermColor::initial_color().into())
+            .clear(crate::colors::TermColor::default().into())
             .map_err(|_| crate::error::Error::DrawError)
     }
 

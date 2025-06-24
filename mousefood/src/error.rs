@@ -1,7 +1,5 @@
 //! Mousefood `Error` enum.
 
-pub(crate) type Result<T, E = Error> = core::result::Result<T, E>;
-
 /// Represents backend error.
 #[derive(thiserror::Error, Debug)]
 pub enum Error {

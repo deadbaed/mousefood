@@ -1,12 +1,12 @@
+use crate::Result;
 use crate::colors::TermColor;
-use crate::error::Result;
 use embedded_graphics::prelude::DrawTarget;
 use embedded_graphics::prelude::PixelColor;
 
 /// Trait to implement for displays to be usable with mousefood.
 ///
 /// The display must implement [`DrawTarget`]
-pub trait DisplayTarget<D, C>
+pub trait BufferedDisplay<D, C>
 where
     D: DrawTarget<Color = C>,
     C: PixelColor + From<TermColor>,

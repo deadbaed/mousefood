@@ -13,9 +13,11 @@ mod macros;
 pub mod prelude;
 
 pub use backend::{EmbeddedBackend, EmbeddedBackendConfig};
-pub use display::DisplayTarget;
+pub use display::BufferedDisplay;
 pub use embedded_graphics;
 pub use framebuffer::HeapBuffer;
+
+pub type Result<T, E = error::Error> = core::result::Result<T, E>;
 
 #[cfg(feature = "fonts")]
 pub use embedded_graphics_unicodefonts as fonts;

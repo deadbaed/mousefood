@@ -23,7 +23,7 @@ impl<C: PixelColor + From<TermColor>> HeapBuffer<C> {
     pub fn new(bounding_box: Rectangle) -> HeapBuffer<C> {
         Self {
             data: vec![
-                crate::colors::TermColor::initial_color().into();
+                crate::colors::TermColor::default().into();
                 (bounding_box.size.width * bounding_box.size.height) as usize
             ],
             bounding_box,

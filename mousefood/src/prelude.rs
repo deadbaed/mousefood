@@ -7,7 +7,7 @@
 //! ```
 
 pub use crate::backend::{EmbeddedBackend, EmbeddedBackendConfig};
-pub use crate::display::DisplayTarget;
+pub use crate::display::BufferedDisplay;
 pub use embedded_graphics::pixelcolor::{
     Bgr555, Bgr565, Bgr666, Bgr888, Rgb555, Rgb565, Rgb666, Rgb888,
 };
