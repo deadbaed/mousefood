@@ -44,7 +44,7 @@ fn main() -> Result<(), Error> {
         ),
     };
 
-    impl BufferedDisplay<SimulatorDisplay<Bgr565>, Bgr565> for MySuperDisplay {
+    impl mousefood::BufferedDisplay<SimulatorDisplay<Bgr565>, Bgr565> for MySuperDisplay {
         fn draw_target(
             &mut self,
         ) -> &mut impl mousefood::embedded_graphics::prelude::DrawTarget<Color = Bgr565> {
