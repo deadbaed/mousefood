@@ -2,8 +2,8 @@
 
 #[derive(thiserror::Error, Debug)]
 /// Flushing to the display failed.
-#[error("flushing to DrawTarget failed")]
-pub struct FlushError;
+#[error("flushing to DrawTarget failed: {0}")]
+pub struct FlushError(pub alloc::boxed::Box<dyn core::error::Error>);
 
 /// Represents backend error.
 #[derive(thiserror::Error, Debug)]

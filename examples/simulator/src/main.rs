@@ -58,8 +58,9 @@ fn main() -> Result<(), Error> {
                 .events()
                 .any(|e| e == SimulatorEvent::Quit)
             {
-                println!("simulator window closed");
-                return Err(mousefood::error::FlushError);
+                return Err(mousefood::error::FlushError(
+                    "simulator window closed".into(),
+                ));
             }
             Ok(())
         }
