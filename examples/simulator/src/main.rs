@@ -51,7 +51,7 @@ fn main() -> Result<(), Error> {
             &mut self.display
         }
 
-        fn flush(&mut self) -> Result<(), mousefood::error::Error> {
+        fn flush(&mut self) -> Result<(), mousefood::error::FlushError> {
             self.simulator_window.update(&self.display);
             if self
                 .simulator_window
@@ -59,7 +59,7 @@ fn main() -> Result<(), Error> {
                 .any(|e| e == SimulatorEvent::Quit)
             {
                 println!("simulator window closed");
-                return Err(mousefood::error::Error::Flush);
+                return Err(mousefood::error::FlushError);
             }
             Ok(())
         }

@@ -1,4 +1,3 @@
-use crate::Result;
 use crate::colors::TermColor;
 use embedded_graphics::prelude::DrawTarget;
 use embedded_graphics::prelude::PixelColor;
@@ -20,5 +19,5 @@ where
     /// Display contents of the in-memory display to the screen
     ///
     /// If the display driver requires additional operations, this is the place to make them
-    fn flush(&mut self) -> Result<()>;
+    fn flush(&mut self) -> Result<(), crate::error::FlushError>;
 }

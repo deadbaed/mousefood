@@ -227,6 +227,6 @@ where
     }
 
     fn flush(&mut self) -> Result<()> {
-        self.display.flush()
+        Ok(self.display.flush()?)
     }
 }
