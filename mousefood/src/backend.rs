@@ -1,9 +1,9 @@
-use alloc::boxed::Box;
-use core::marker::PhantomData;
-
+use crate::Result;
 use crate::colors::*;
 use crate::default_font;
 use crate::framebuffer;
+use alloc::boxed::Box;
+use core::marker::PhantomData;
 use embedded_graphics::Drawable;
 use embedded_graphics::draw_target::DrawTarget;
 use embedded_graphics::geometry::{self, Dimensions};
@@ -124,8 +124,6 @@ where
         )
     }
 }
-
-type Result<T, E = crate::error::Error> = core::result::Result<T, E>;
 
 impl<D, C> Backend for EmbeddedBackend<'_, D, C>
 where
