@@ -79,6 +79,11 @@ jobs:
             dir: examples/epd-waveshare-demo
             target: ""
             setup_xtensa: true
+          # STM32-Nucleo OLED Demo
+          - name: stm32-nucleo-oled-example
+            dir: examples/stm32-nucleo-oled-example
+            target: "thumbv7em-none-eabihf"
+            setup_xtensa: false
           # Lilygo-epd47 demo
           - name: lilygo-epd47-demo
             dir: examples/lilygo-epd47-demo
@@ -99,6 +104,9 @@ jobs:
           default: true
           buildtargets: esp32
           ldproxy: true
+      - name: Setup target
+        if: ${{ matrix.project.target != '' && matrix.project.setup_xtensa == false }}
+        run: rustup target add ${{ matrix.project.target }}
       - name: Cache Cargo dependencies
         uses: Swatinem/rust-cache@v2
       - name: Run Clippy
